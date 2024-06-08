@@ -1,12 +1,12 @@
 Git
 ---
 
-### Required  Softwares to be installed on the you system 
+### Required  Softwares to be installed on your system (Windows, Mac, Linux)
 
 1. Git [Refer Here for Git Download](https://www.git-scm.com/downloads)
 2. VS Code [Refer Here for VS Code Download](https://code.visualstudio.com/download)
 
-### Git Refs
+### Git Official docs Refs
 
 * [Refer Here for Official docs for git](https://www.atlassian.com/git/tutorials/what-is-version-control)
 
