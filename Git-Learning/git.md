@@ -23,3 +23,11 @@ Git
 
 ![Preview](../images/git01.png)
 
+### Git Branching / workflow
+
+* [Refer Here](https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow) for official docs 
+
+![Preview](../images/git02.png)
+
+
+
