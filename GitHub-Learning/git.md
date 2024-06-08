@@ -16,4 +16,10 @@ Git
 
 ### Git Area's 
 
+1. Working Tree 
+2. Staging Area 
+3. Local Repository 
+4. Remote Repository 
+
 ![Preview](../images/git01.png)
+
