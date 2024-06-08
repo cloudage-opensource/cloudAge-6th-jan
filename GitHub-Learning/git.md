@@ -16,3 +16,4 @@ Git
 
 ### Git Area's 
 
+![Preview](../images/git01.png)
