@@ -5,9 +5,10 @@ Apache Airflow
 
 * Now, follow these steps to install Airflow.
 
-#### 1. Create the user and directory for Airflow
+#### 1. Create the user, directory and dependencies for Airflow
 
 ```bash
+yum install -y gcc openssl-devel bzip2-devel libffi-devel zlib-devel 
 sudo adduser airflow 
 sudo mkdir -p /opt/apache-airflow/airflow
 sudo chown $USER:$USER /opt/apache-airflow
@@ -17,12 +18,12 @@ sudo chown $USER:$USER /opt/apache-airflow
 
 1. **Create a virtual environment**
    ```bash
-   python3 -m venv /opt/apache-airflow/evn_airflow
+   python -m venv /opt/apache-airflow/env_airflow
    ```
 
 2. **Activate the virtual environment**
    ```bash
-   source /opt/apache-airflow/evn_airflow/bin/activate
+   source /opt/apache-airflow/env_airflow/bin/activate
    ```
 
 #### 3. Install Airflow
@@ -180,3 +181,6 @@ To run Airflow as a service, create systemd service files for the web server and
 
 
 
+AIRFLOW_VERSION=2.9.2
+PYTHON_VERSION="$(python3 --version | cut -d " " -f 2 | cut -d "." -f 1-2)"
+CONSTRAINT_URL="https://raw.githubusercontent.com/apache/airflow/constraints-${AIRFLOW_VERSION}/constraints-${PYTHON_VERSION}.txt"
