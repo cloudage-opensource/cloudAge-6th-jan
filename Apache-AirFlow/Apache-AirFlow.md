@@ -134,8 +134,7 @@ To run Airflow as a service, create systemd service files for the web server and
    [Service]
    Environment="AIRFLOW_HOME=/opt/apache-airflow/airflow"
    User=airflow
-   Gro
-   up=airflow
+   Group=airflow
    ExecStart=/opt/apache-airflow/evn_airflow/bin/airflow webserver -p 8080 --pid /opt/apache-airflow/airflow/airflow-webserver.pid --stdout /opt/apache-airflow/airflow/airflow-webserver.out --stderr /opt/apache-airflow/airflow/airflow-webserver.err
    Restart=on-failure
    
