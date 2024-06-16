@@ -4,54 +4,143 @@ Apache Airflow
 * [Refer Here](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/overview.html) Apache Airflow Architecture 
 
 
-* If you are using centos8 
-```
-sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
-sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
-yum update -y
-```
 
-* PreReq:
+### Step 1: Install Airflow
 
-```
-sudo yum install -y python38-devel.x86_64
+Now, follow these steps to reinstall Airflow.
 
-python3.8 -V
+#### 1. Create the user and directory for Airflow
+
+```bash
+sudo adduser airflow 
+sudo mkdir -p /opt/apache-airflow/airflow
+sudo chown $USER:$USER /opt/apache-airflow
 ```
 
-### Airflow Setup
+#### 2. Set up the Python environment
 
-* [Refer Here](https://airflow.apache.org/docs/apache-airflow/stable/installation/installing-from-pypi.html#installation-from-pypi) Airflow setup official docs 
+1. **Create a virtual environment**
+   ```bash
+   python3 -m venv /opt/apache-airflow/evn_airflow
+   ```
 
-```
-yum install -y python3 python3-pip python3-devel gcc-c++ libffi-devel mariadb-devel
-echo "export AIRFLOW_HOME=/opt/apache-airflow/airflow" >> ~/.bashrc 
-ln -s /usr/bin/python3.8 /usr/local/lib/python3.8 
-source ~/.bashrc 
-python3 -m venv airflow_env
-source airflow_env/bin/activate
-pip3 install --upgrade pip setuptools
+2. **Activate the virtual environment**
+   ```bash
+   source /opt/apache-airflow/evn_airflow/bin/activate
+   ```
 
-export AIRFLOW_HOME=/opt/apache-airflow/airflow
-pip3 install "apache-airflow" --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.9.1/constraints-3.8.txt"
-airflow db init 
-```
+#### 3. Install Airflow
 
-* Once you install airflow crate airflow user 
+1. **Upgrade pip and install Apache Airflow**
+   * Create bash script to install airflow `setup-airflow.sh`
+   * Give executable permission to airflow `chomd +x /opt/apache-airflow/setup-airflow.sh`
 
-```
-airflow users create \
-    --username admin \
-    --password admin \
-    --firstname Admin \
-    --lastname User \
-    --role Admin \
-    --email admin@cgs.com
-```
+   ```bash
+   pip3 install --upgrade pip setuptools wheel
+   export AIRFLOW_HOME=/opt/apache-airflow/airflow
+   AIRFLOW_VERSION=2.9.2 # replace with the desired version
+   PYTHON_VERSION="$(python3 --version | cut -d " " -f 2 | cut -d "." -f 1-2)"
+   CONSTRAINT_URL="https://raw.githubusercontent.com/apache/airflow/constraints-${AIRFLOW_VERSION}/constraints-${PYTHON_VERSION}.txt"
+   pip3 install "apache-airflow==${AIRFLOW_VERSION}" --constraint "${CONSTRAINT_URL}"
+   ```
+
+2. **Install MySQL client for Airflow**
+   ```bash
+   pip install apache-airflow-providers-mysql
+   ```
+
+#### 4. Configure Airflow
+
+1. **Initialize the database**
+   ```bash
+   airflow db init
+   ```
+
+2. **Configure Airflow to use MySQL**
+   Open the `airflow.cfg` file in the `$AIRFLOW_HOME` directory and set the following:
+   ```ini
+   sql_alchemy_conn = mysql+mysqldb://airflow:your_password@localhost/airflow
+   ```
+
+#### 5. Create Airflow User
+
+1. **Create an admin user**
+   ```bash
+   airflow users create \
+       --username admin \
+       --firstname FIRST_NAME \
+       --lastname LAST_NAME \
+       --role Admin \
+       --email admin@example.com
+   ```
+
+#### 6. Running Airflow
+
+1. **Start the Airflow web server**
+   ```bash
+   airflow webserver -D --port 8080
+   ```
+
+2. **Start the Airflow scheduler**
+   ```bash
+   source /opt/apache-airflow/venv/bin/activate
+   airflow scheduler -D 
+   ```
+
+#### 7. Systemd Service
+
+To run Airflow as a service, create systemd service files for the web server and scheduler.
+
+1. **Airflow Webserver Service**
+   Create `/etc/systemd/system/airflow-webserver.service`:
+   ```ini
+   [Unit]
+   Description=Airflow webserver daemon
+   After=network.target
+   
+   [Service]
+   Environment="AIRFLOW_HOME=/opt/apache-airflow/airflow"
+   User=airflow
+   Group=airflow
+   ExecStart=/opt/apache-airflow/evn_airflow/bin/airflow webserver --port 8080
+   Restart=on-failure
+   
+   [Install]
+   WantedBy=multi-user.target
+   ```
+
+2. **Airflow Scheduler Service**
+   Create `/etc/systemd/system/airflow-scheduler.service`:
+   ```ini
+   [Unit]
+   Description=Airflow scheduler daemon
+   After=network.target
+   
+   [Service]
+   Environment="AIRFLOW_HOME=/opt/apache-airflow"
+   User=airflow
+   Group=airflow
+   ExecStart=/opt/apache-airflow/evn_airflow/bin/airflow scheduler
+   Restart=on-failure
+   
+   [Install]
+   WantedBy=multi-user.target
+   ```
+
+3. **Enable and start the services**
+   ```bash
+   sudo systemctl daemon-reload
+   sudo systemctl enable airflow-webserver
+   sudo systemctl enable airflow-scheduler
+   sudo systemctl start airflow-webserver
+   sudo systemctl start airflow-scheduler
+   ```
+
+
 
 * To configure LocalExecutor we need external db Supported db [Refer Here](https://airflow.apache.org/docs/apache-airflow/2.2.5/howto/set-up-database.html)
 
-* We are going with Mysql DB 
+* Setup MySQL DB for Airflow 
 
 ```
 * Setup The Mysql Server (On Database Host)
@@ -80,33 +169,9 @@ GRANT ALL PRIVILEGES ON airflow_db.* TO 'airflow'@'%';
 FLUSH PRIVILEGES;
 
 exit;
-
-
-
-
 ```
 
-* To use backend db for airflow we need to change DB Configuration in `airflow.cfg`
 
-```
-vi airflow.cfg
-# comment the below configuration 
-sql_alchemy_conn = sqlite:////opt/apache-airflow/airflow/airflow.db
-
-sql_alchemy_conn = mysql+mysqldb://airflow:P@ssw0rd@localhost/airflow_db
-```
-
-* Again we need to crate the user 
-
-```
-airflow users create \
-    --username admin \
-    --password admin \
-    --firstname Admin \
-    --lastname User \
-    --role Admin \
-    --email admin@cgs.com
-```
 
 * To access the airflow webserver `http://<pulic_ip>:8080`
 
